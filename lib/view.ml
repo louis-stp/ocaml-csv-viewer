@@ -10,29 +10,55 @@
 
 type t = {
   row_offset    : int;  (* index of the first visible row *)
-  cursor        : int;  (* cursor position relative to row_offset *)
-  term_width    : int;
-  term_height   : int;
+  col_offset    : int;  
+  cursor_row    : int;  (* cursor position is relative to the offset *)
+  cursor_col   : int;  
+  term_width    : int;  (* number of characters *)
+  term_height   : int;  (* number of rows of height *)
   total_rows    : int;  (* total number of rows in the file, from the index *)
-  max_col_width : int;
+  total_cols : int;
 }
 
-let init ~term_width ~term_height ~total_rows ~max_col_width = {
+let init ~term_width ~term_height ~total_rows ~total_cols = {
   row_offset = 0;
-  cursor = 0;
+  col_offset = 0;
+  cursor_row = 0;
+  cursor_col = 0;
   term_width;
   term_height;
   total_rows;
-  max_col_width;
+  total_cols;
 }
 
+(* removing 2 visible rows 
+ - the first for the sticky header row
+ - the second for the status bar at the bottom
+*)
 let visible_rows t = t.term_height - 2
 
-let scroll_down _t =
-  failwith "todo"
+let scroll_down t =
+  {t with row_offset = min (t.total_rows-1) (t.row_offset + 1)}
 
-let scroll_up _t =
-  failwith "todo"
+let scroll_up t =
+  {t with row_offset = max 0 ( t.row_offset - 1)}
 
-let resize _w _h _t =
-  failwith "todo"
+let scroll_right t =
+  {t with col_offset = min (t.total_cols-1) (t.col_offset + 1)}
+
+let scroll_left t =
+  {t with col_offset = max 0 (t.col_offset - 1)}
+
+let scroll_to_top t =
+  {t with row_offset = 0}
+
+let scroll_to_bottom t =
+  {t with row_offset = max 0 (t.total_rows - (visible_rows t))}
+
+let resize width height t =
+  (* 
+    keeping it simple to start, any resizing sets cursor back to home. 
+    TODO-someday: update this to be more dynamic.
+  *)
+  { t with cursor_row = 0; cursor_col = 0;term_width = width; term_height = height }  
+
+  

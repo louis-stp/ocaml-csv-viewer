@@ -21,14 +21,25 @@ let move_to row col = Printf.sprintf "\027[%d;%dH" row col
 (* Truncate or pad a string to exactly [width] characters. *)
 let fit_string s width =
   let len = String.length s in
-  if len >= width then String.sub s 0 width
+  if len >= width then 
+   String.sub s 0 (width-1) ^ ">"
   else s ^ String.make (width - len) ' '
 
 (* Compute the display width for each column based on visible rows.
    Width = min(max cell length in that column, max_col_width). *)
 let compute_col_widths ~max_col_width (rows : Row.t list) : int list =
-  ignore (max_col_width, rows);
-  failwith "todo"
+  let transpose = function
+  | [] -> []
+  | hd :: _ as rows -> List.init (List.length hd) (fun i ->
+    List.map (fun row ->
+      match List.nth_opt row i with
+      | Some v -> v
+      | None -> 0
+      ) rows
+    ) in
+  let cell_widths = rows |> List.map (List.map String.length) in
+  cell_widths |> transpose |> List.map (List.fold_left max 0) |> List.map (min max_col_width)
+
 
 (* Render a single row as a string, with cells fitted to col_widths.
    [attr] is an ANSI prefix string for styling (e.g. bold, reverse). *)

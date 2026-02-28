@@ -1,0 +1,3 @@
+(library
+ (name csv_viewer)
+ (libraries csv notty notty.unix))

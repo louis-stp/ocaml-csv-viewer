@@ -13,13 +13,12 @@ type line_parser_state =
 
 let build_index (ic : in_channel) : Index.t =
   let rec line_parser ~parser_state ~indices =
-    let continue = line_parser ~parser_state ~indices in
     match parser_state, input_char ic with
     | Normal, '"' -> line_parser ~parser_state:InQuotes ~indices
     | Normal, '\n' -> line_parser ~parser_state ~indices:(pos_in ic :: indices)
-    | Normal, _ -> continue
+    | Normal, _ -> line_parser ~parser_state ~indices 
     | InQuotes, '"' -> line_parser ~parser_state:Normal ~indices
-    | InQuotes, _ -> continue
+    | InQuotes, _ -> line_parser ~parser_state ~indices 
     | exception End_of_file -> indices
   in line_parser ~parser_state:Normal ~indices:[0] |> List.rev |> Array.of_list
 
